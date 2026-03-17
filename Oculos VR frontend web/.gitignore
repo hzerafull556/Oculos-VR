@@ -1,0 +1,20 @@
+# Dependencias e build
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.vite-temp/
+
+# Ambiente local
+.env
+.env.*
+!.env.example
+
+# Logs e temporarios
+*.log
+*.tmp
+
+# Sistema
+.DS_Store
+Thumbs.db
