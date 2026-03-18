@@ -22,6 +22,34 @@ def test_root_route_returns_basic_metadata() -> None:
     }
 
 
+def test_auth_login_preflight_allows_frontend_origin(monkeypatch) -> None:
+    async def fake_ping(self: MongoManager) -> bool:
+        self.connected = True
+        self.last_error = None
+        return True
+
+    monkeypatch.setattr(
+        MongoManager,
+        "_has_placeholder_credentials",
+        lambda self: False,
+    )
+    monkeypatch.setattr(MongoManager, "ping", fake_ping)
+
+    with TestClient(app) as client:
+        response = client.options(
+            "/auth/login",
+            headers={
+                "Origin": "http://localhost:3000",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "authorization,content-type",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+    assert response.headers["access-control-allow-credentials"] == "true"
+
+
 def test_health_route_reports_database_down(monkeypatch) -> None:
     async def fake_ping(self: MongoManager) -> bool:
         self.connected = False

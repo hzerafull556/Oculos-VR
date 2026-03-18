@@ -13,6 +13,7 @@ export function Login() {
 
   const { signIn, isAuthenticated, loading } = useContext(AuthContext);
   const navigate = useNavigate();
+  const docsUrl = `${(import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')}/docs`;
 
   if (loading) {
     return (
@@ -65,6 +66,22 @@ export function Login() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">OculosVR</h1>
           <p className="text-gray-500 mt-2">Acesso Administrativo</p>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-100 text-blue-800 p-4 rounded-lg mb-6 text-sm">
+          <p className="font-medium">Primeiro acesso ao MVP?</p>
+          <p className="mt-1">
+            O cadastro inicial ainda acontece no backend. Crie o usuario em{' '}
+            <a
+              href={docsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold underline"
+            >
+              /docs - POST /auth/register
+            </a>{' '}
+            e depois volte para fazer login aqui.
+          </p>
         </div>
 
         {error && (

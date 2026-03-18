@@ -25,6 +25,15 @@ main.py           # Entrada do uvicorn
 
 1. Copie `.env.example` para `.env`.
 2. Ajuste `MONGODB_URL`, `MONGODB_DB` e `JWT_SECRET_KEY`.
+3. Revise `APP_CORS_ORIGINS` se o frontend rodar fora de `http://localhost:3000`.
+
+## Variaveis de ambiente importantes
+
+```env
+APP_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+```
+
+Essa configuracao permite que o frontend web faca login e consulte `/users/me` no navegador durante o desenvolvimento.
 
 ## Como instalar dependencias
 
@@ -68,3 +77,10 @@ Manual:
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 ```
+
+## Primeiro acesso
+
+1. Suba a API.
+2. Abra `http://127.0.0.1:8000/docs`.
+3. Execute `POST /auth/register` para criar o usuario inicial.
+4. Depois use esse usuario no frontend.

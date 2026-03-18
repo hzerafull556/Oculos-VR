@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     app_debug: bool = True
     app_host: str = "0.0.0.0"
     app_port: int = 8000
+    app_cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     mongodb_url: str = "mongodb://localhost:27017"
     mongodb_db: str = "meu_backend_db"
@@ -25,6 +26,16 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Converte a string do `.env` em lista para o middleware de CORS."""
+
+        return [
+            origin.strip()
+            for origin in self.app_cors_origins.split(",")
+            if origin.strip()
+        ]
 
 
 settings = Settings()

@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
-# Este contexto cuida do hash das senhas usando bcrypt.
+# O passlib centraliza a estrategia de hash e verificacao para o restante da app.
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
