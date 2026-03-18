@@ -1,112 +1,133 @@
 # OculosVR
 
-Projeto de estudo com backend em FastAPI e frontend web em React para um painel administrativo do OculosVR.
+Painel administrativo para o OculosVR — backend em **FastAPI + MongoDB** e frontend em **React + Vite + Tailwind CSS**.
 
-## Estrutura atual
+## Stack
 
-> Neste workspace, as pastas principais continuam com os nomes atuais para evitar mudancas agressivas.
+| Camada    | Tecnologia                               |
+|-----------|------------------------------------------|
+| Backend   | Python 3 · FastAPI · Uvicorn · pymongo   |
+| Auth      | JWT (python-jose) · bcrypt (passlib)     |
+| Frontend  | React 19 · TypeScript · Vite · Axios     |
+| Estilo    | Tailwind CSS v4                          |
+| Testes    | pytest                                   |
+
+## Estrutura
 
 ```text
 Oculos VR/
-|-- Oculos VR backend/        # API FastAPI
-|-- Oculos VR frontend web/   # Frontend React + Vite
-|-- scripts/                  # Scripts PowerShell para rotina local
-|-- .gitignore
-`-- README.md
+├── Oculos VR backend/    # API FastAPI
+├── Oculos VR frontend web/  # SPA React + Vite
+├── docs/                 # Documentação das etapas
+├── scripts/              # Automação local (PowerShell)
+├── .gitignore
+└── README.md
 ```
 
-## O que existe em cada pasta
+## Pré-requisitos
 
-- `Oculos VR backend/`: autenticacao, rotas FastAPI, servicos, repositorios e testes.
-- `Oculos VR frontend web/`: tela de login, dashboard e consumo do fluxo `/auth/login` + `/users/me`.
-- `scripts/`: atalhos simples para instalar dependencias, subir servicos e rodar testes.
-- `docs/`: documentacao didatica das etapas implementadas.
+- Python 3.11+
+- Node.js 20+
+- MongoDB (local ou Atlas)
 
-## Como preparar o ambiente
+## Configuração do ambiente
 
 ### Backend
 
-1. Copie `Oculos VR backend/.env.example` para `Oculos VR backend/.env`.
-2. Ajuste o MongoDB e a chave JWT no seu arquivo local.
-3. Revise `APP_CORS_ORIGINS` se o frontend rodar em uma origem diferente da padrao.
-4. Rode:
-
-```powershell
-.\scripts\install-backend.ps1
-```
+1. Copie o arquivo de exemplo e edite as variáveis:
+   ```powershell
+   Copy-Item "Oculos VR backend\.env.example" "Oculos VR backend\.env"
+   ```
+2. Ajuste `MONGODB_URL`, `MONGODB_DB` e `JWT_SECRET_KEY`.
+3. Revise `APP_CORS_ORIGINS` se o frontend rodar em outra porta.
 
 ### Frontend
 
-1. Copie `Oculos VR frontend web/.env.example` para `Oculos VR frontend web/.env` ou `.env.local`.
-2. Confirme que `VITE_API_URL` aponta para o backend local.
-3. Rode:
+1. Copie o arquivo de exemplo:
+   ```powershell
+   Copy-Item "Oculos VR frontend web\.env.example" "Oculos VR frontend web\.env.local"
+   ```
+2. Confirme que `VITE_API_URL` aponta para o backend local (padrão: `http://127.0.0.1:8000`).
+
+## Instalação
 
 ```powershell
+.\scripts\install-backend.ps1
 .\scripts\install-frontend.ps1
 ```
 
-## Como rodar
-
-Subir o backend:
+## Executar
 
 ```powershell
+# 1. Backend
 .\scripts\run-backend.ps1
-```
+# → http://127.0.0.1:8000  |  Swagger: http://127.0.0.1:8000/docs
 
-Subir o frontend:
-
-```powershell
+# 2. Frontend
 .\scripts\run-frontend.ps1
+# → http://localhost:3000
 ```
 
-## Ordem recomendada para subir o projeto
+> Suba sempre o backend antes do frontend.
 
-1. Suba o backend primeiro.
-2. Abra `http://127.0.0.1:8000/docs`.
-3. Crie o usuario inicial em `POST /auth/register`.
-4. Suba o frontend.
-5. Faca login pela interface web em `http://localhost:3000`.
+## Primeiro acesso
 
-## Como testar
+1. Com o backend rodando, abra `http://127.0.0.1:8000/docs`.
+2. Execute `POST /auth/register` para criar o usuário inicial.
+3. Faça login pelo frontend em `http://localhost:3000`.
 
-Testes do backend:
+## Endpoints da API
+
+| Método | Rota               | Descrição                        |
+|--------|--------------------|----------------------------------|
+| POST   | `/auth/register`   | Cria usuário                     |
+| POST   | `/auth/login`      | Autentica e retorna JWT          |
+| GET    | `/users/me`        | Dados do usuário autenticado     |
+
+## Fluxo de autenticação
+
+```
+Login (email + senha)
+  └─► POST /auth/login
+        └─► JWT retornado
+              └─► GET /users/me
+                    └─► AuthContext mantém sessão
+                          └─► Dashboard renderizado
+```
+
+## Testes
 
 ```powershell
+# Rodar suite de testes do backend
 .\scripts\test-backend.ps1
-```
 
-Validacao do frontend:
-
-```powershell
+# Validar o frontend (type-check + build)
 cd ".\Oculos VR frontend web"
 npm run lint
 npm run build
 ```
 
-## Endpoints principais do backend
+## Variáveis de ambiente
 
-- `POST /auth/register`
-- `POST /auth/login`
-- `GET /users/me`
+**Backend** (`Oculos VR backend/.env`)
 
-## Variaveis de ambiente importantes
+| Variável            | Descrição                              |
+|---------------------|----------------------------------------|
+| `MONGODB_URL`       | URI de conexão ao MongoDB              |
+| `MONGODB_DB`        | Nome do banco de dados                 |
+| `JWT_SECRET_KEY`    | Chave secreta para assinar tokens JWT  |
+| `APP_CORS_ORIGINS`  | Origens permitidas pelo CORS           |
 
-- Backend: `MONGODB_URL`, `MONGODB_DB`, `JWT_SECRET_KEY`, `APP_CORS_ORIGINS`
-- Frontend: `VITE_API_URL`
+**Frontend** (`Oculos VR frontend web/.env.local`)
 
-## Fluxo atual de autenticacao
+| Variável        | Descrição               |
+|-----------------|-------------------------|
+| `VITE_API_URL`  | URL base do backend     |
 
-1. O usuario inicial e criado manualmente em `/docs` pela rota `POST /auth/register`.
-2. O frontend envia o login para `POST /auth/login`.
-3. O backend devolve um JWT.
-4. O frontend salva o token e consulta `GET /users/me`.
-5. O dashboard usa os dados retornados para manter a sessao.
+## Documentação
 
-Documentacao complementar:
+- `docs/auth-flow.md` — fluxo de autenticação detalhado
 
-- `docs/auth-flow.md`
+## Higiene do repositório
 
-## Observacoes de higiene
-
-- Nao versionar `.env`, `venv`, `.venv`, `node_modules`, `dist`, `__pycache__` e caches de teste.
-- Se quiser limpar o projeto localmente, remova artefatos gerados antes de compartilhar ou subir para um repositorio.
+Nunca versionar: `.env`, `.venv`, `node_modules`, `dist`, `__pycache__`, `.pytest_cache`.
