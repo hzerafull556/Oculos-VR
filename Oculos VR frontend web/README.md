@@ -487,7 +487,7 @@ Execute `npm run lint` para identificar os erros de tipo antes do build. O Vite 
 **Porta 3000 já em uso**
 Encerre o processo que ocupa a porta ou altere a porta no script `dev` em `package.json`.
 
----
+--
 
 ## 20. Guia rápido para novos desenvolvedores
 
