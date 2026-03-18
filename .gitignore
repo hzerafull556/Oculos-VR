@@ -40,6 +40,10 @@ coverage/
 *.temp
 *.bak
 *.swp
+*.swo
+*.orig
+*.rej
+*~
 
 # -----------------------------
 # Sistema e editor
@@ -48,8 +52,14 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
+.vs/
+*.suo
+*.user
+*.userossc
+*.sln.docstates
 
 # -----------------------------
 # Exportacoes e artefatos locais
 # -----------------------------
 *.zip
+_quarentena/

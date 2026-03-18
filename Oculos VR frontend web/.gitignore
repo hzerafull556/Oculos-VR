@@ -5,6 +5,7 @@ build/
 coverage/
 .vite/
 .vite-temp/
+_quarentena/
 
 # Ambiente local
 .env
@@ -14,7 +15,16 @@ coverage/
 # Logs e temporarios
 *.log
 *.tmp
+*.temp
+*.bak
+*.swp
+*.orig
+*.rej
+*~
 
 # Sistema
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/
+.vs/

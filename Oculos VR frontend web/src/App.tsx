@@ -15,7 +15,6 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
           </Route>
 
-          {/* Mantemos um fallback simples para concentrar o fluxo no login/dashboard. */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>

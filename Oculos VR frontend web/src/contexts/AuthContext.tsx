@@ -1,23 +1,41 @@
-import { createContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { api, clearAuthToken, getStoredToken, setAuthToken } from '../services/api';
-import { User } from '../types';
+import type { User } from '../types';
 
-interface AuthContextData {
+interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
-  signIn: (token: string, userData: User) => void;
+  signIn: (token: string) => Promise<User>;
   signOut: () => void;
 }
 
-export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  async function syncUserFromToken(token: string) {
+    setAuthToken(token);
+
+    try {
+      const response = await api.get<User>('/users/me');
+      setUser(response.data);
+      return response.data;
+    } catch (error) {
+      clearAuthToken();
+      setUser(null);
+      throw error;
+    }
+  }
+
   useEffect(() => {
-    async function loadStorageData() {
+    async function restoreSession() {
       const token = getStoredToken();
 
       if (!token) {
@@ -26,26 +44,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        // Reaplicamos o token salvo antes de consultar o perfil atual.
-        setAuthToken(token);
-        const response = await api.get<User>('/users/me');
-        setUser(response.data);
+        await syncUserFromToken(token);
       } catch (error) {
-        console.error('Erro ao validar token:', error);
-        clearAuthToken();
-        setUser(null);
+        console.error('Erro ao validar token salvo:', error);
       } finally {
         setLoading(false);
       }
     }
 
-    loadStorageData();
+    void restoreSession();
   }, []);
 
-  function signIn(token: string, userData: User) {
-    // O contexto concentra o token e o usuario para o app inteiro.
-    setAuthToken(token);
-    setUser(userData);
+  async function signIn(token: string) {
+    return syncUserFromToken(token);
   }
 
   function signOut() {
@@ -58,4 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error('useAuth deve ser usado dentro de AuthProvider.');
+  }
+
+  return context;
 }

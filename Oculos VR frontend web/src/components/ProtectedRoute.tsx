@@ -1,20 +1,13 @@
-import { useContext } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
+import { FullScreenLoader } from './FullScreenLoader';
 
 export function ProtectedRoute() {
-  const { isAuthenticated, loading } = useContext(AuthContext);
+  const { isAuthenticated, loading } = useAuth();
 
-  // Enquanto verifica o token, mostra um loading simples
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Carregando...</p>
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
-  // Se não estiver autenticado, redireciona para o login
-  // O Outlet renderiza as rotas filhas (ex: Dashboard) se estiver tudo ok
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 }

@@ -4,9 +4,10 @@ Frontend web do painel administrativo do projeto OculosVR, feito com React, Vite
 
 ## O que existe aqui
 
+- `src/components/`: componentes reutilizaveis como rota protegida e loader de tela
+- `src/contexts/`: estado global de autenticacao e restauracao de sessao
 - `src/pages/`: telas como login e dashboard
-- `src/contexts/`: estado global de autenticacao
-- `src/services/`: configuracao do Axios
+- `src/services/`: configuracao do Axios e helpers da API
 - `src/types/`: tipos usados no app
 
 ## Ambiente
@@ -74,6 +75,6 @@ Como ainda nao existe tela publica de cadastro neste MVP:
 
 1. a tela de login envia email e senha para `POST /auth/login`;
 2. o backend responde com um token JWT;
-3. o frontend salva o token e chama `GET /users/me`;
+3. o `AuthContext` salva o token, chama `GET /users/me` e restaura a sessao quando necessario;
 4. o `AuthContext` guarda o usuario autenticado;
 5. o dashboard consome esses dados.

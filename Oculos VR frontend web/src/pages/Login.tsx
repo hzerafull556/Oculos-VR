@@ -1,9 +1,16 @@
-import { type FormEvent, useContext, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import type { AxiosError } from 'axios';
+import type { FormEvent } from 'react';
+import { useState } from 'react';
 import { Lock, Mail } from 'lucide-react';
-import { AuthContext } from '../contexts/AuthContext';
-import { api, clearAuthToken, setAuthToken } from '../services/api';
-import { AuthResponse, LoginPayload, User } from '../types';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { FullScreenLoader } from '../components/FullScreenLoader';
+import { useAuth } from '../contexts/AuthContext';
+import { api, API_DOCS_URL } from '../services/api';
+import type { AuthResponse, LoginPayload } from '../types';
+
+interface ApiErrorResponse {
+  detail?: string;
+}
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -11,24 +18,19 @@ export function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signIn, isAuthenticated, loading } = useContext(AuthContext);
+  const { signIn, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
-  const docsUrl = `${(import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')}/docs`;
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-500">Carregando...</p>
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  async function handleLogin(e: FormEvent) {
-    e.preventDefault();
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setError('');
     setIsLoading(true);
 
@@ -41,19 +43,11 @@ export function Login() {
         },
       });
 
-      const { access_token } = authResponse.data;
-
-      // Aplicamos o token antes do /users/me para a API reconhecer a sessao.
-      setAuthToken(access_token);
-
-      const userResponse = await api.get<User>('/users/me');
-      signIn(access_token, userResponse.data);
-
+      await signIn(authResponse.data.access_token);
       navigate('/dashboard', { replace: true });
-    } catch (err: any) {
-      clearAuthToken();
-      console.error(err);
-      const backendMessage = err.response?.data?.detail;
+    } catch (error) {
+      console.error(error);
+      const backendMessage = (error as AxiosError<ApiErrorResponse>).response?.data?.detail;
       setError(backendMessage || 'Credenciais invalidas. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -61,19 +55,19 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-        <div className="text-center mb-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-md">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">OculosVR</h1>
-          <p className="text-gray-500 mt-2">Acesso Administrativo</p>
+          <p className="mt-2 text-gray-500">Acesso Administrativo</p>
         </div>
 
-        <div className="bg-blue-50 border border-blue-100 text-blue-800 p-4 rounded-lg mb-6 text-sm">
+        <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
           <p className="font-medium">Primeiro acesso ao MVP?</p>
           <p className="mt-1">
             O cadastro inicial ainda acontece no backend. Crie o usuario em{' '}
             <a
-              href={docsUrl}
+              href={API_DOCS_URL}
               target="_blank"
               rel="noreferrer"
               className="font-semibold underline"
@@ -85,23 +79,23 @@ export function Login() {
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center">
+          <div className="mb-6 rounded-lg bg-red-50 p-3 text-center text-sm text-red-600">
             {error}
           </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Mail className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                onChange={(event) => setEmail(event.target.value)}
+                className="block w-full rounded-lg border border-gray-300 py-2 pr-3 pl-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 placeholder="voce@exemplo.com"
                 required
               />
@@ -109,16 +103,16 @@ export function Login() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Senha</label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                onChange={(event) => setPassword(event.target.value)}
+                className="block w-full rounded-lg border border-gray-300 py-2 pr-3 pl-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 placeholder="********"
                 required
               />
@@ -128,7 +122,7 @@ export function Login() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="flex w-full justify-center rounded-lg border border-transparent bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
           >
             {isLoading ? 'Entrando...' : 'Entrar no Painel'}
           </button>

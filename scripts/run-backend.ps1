@@ -2,8 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $projectRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $backendPath = Join-Path $projectRoot 'Oculos VR backend'
-$preferredPython = Join-Path $backendPath '.venv\Scripts\python.exe'
-$legacyPython = Join-Path $backendPath 'venv\Scripts\python.exe'
+$pythonExe = Join-Path $backendPath '.venv\Scripts\python.exe'
 
 function Test-PythonModule {
   param(
@@ -35,15 +34,9 @@ function Test-PythonModule {
   }
 }
 
-# Preferimos .venv, mas ainda aceitamos o venv legado se ele estiver mais completo.
-if (Test-PythonModule -PythonExe $preferredPython -ModuleName 'uvicorn') {
-  $pythonExe = $preferredPython
-}
-elseif (Test-PythonModule -PythonExe $legacyPython -ModuleName 'uvicorn') {
-  $pythonExe = $legacyPython
-}
-else {
-  throw 'Nenhum ambiente com uvicorn foi encontrado. Rode .\scripts\install-backend.ps1 primeiro.'
+# Mantemos um unico ambiente local para reduzir duplicacao e ambiguidade.
+if (-not (Test-PythonModule -PythonExe $pythonExe -ModuleName 'uvicorn')) {
+  throw 'Nenhuma .venv valida com uvicorn foi encontrada. Rode .\scripts\install-backend.ps1 primeiro.'
 }
 
 Push-Location $backendPath
