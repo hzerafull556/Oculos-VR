@@ -1,0 +1,3 @@
+[submodule "quest-project"]
+	path = quest-project
+	url = https://github.com/Tour-VR/quest-project
