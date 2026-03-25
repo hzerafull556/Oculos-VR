@@ -11,7 +11,6 @@ from app.core.security import decode_access_token
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
 
-# Com auto_error=False, nos mesmos decidimos a mensagem 401 da API.
 security = HTTPBearer(auto_error=False)
 
 
@@ -52,7 +51,7 @@ async def get_current_user(
 
     try:
         payload = decode_access_token(token)
-        email = payload.get("sub")
+        email = str(payload.get("sub", "")).strip().lower()
     except JWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -66,7 +65,6 @@ async def get_current_user(
         )
 
     try:
-        # Aqui buscamos o usuario real no banco para nao confiar apenas no token.
         user = await service.user_repository.find_by_email(email)
     except ConnectionError as exc:
         raise build_database_http_exception(exc) from exc
@@ -75,6 +73,12 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario nao encontrado.",
+        )
+
+    if not user.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuario inativo.",
         )
 
     return user

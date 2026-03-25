@@ -5,13 +5,32 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from jose import JWTError, jwt
+from jose import jwt
 from passlib.context import CryptContext
 
 from app.core.config import settings
 
-# O passlib centraliza a estrategia de hash e verificacao para o restante da app.
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_RULE_MESSAGE = (
+    "A senha deve ter pelo menos 8 caracteres e incluir letra e numero."
+)
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def validate_password_strength(password: str) -> str:
+    """Aplica uma regra minima de senha sem acoplar a validacao as rotas."""
+
+    if len(password) < PASSWORD_MIN_LENGTH:
+        raise ValueError(PASSWORD_RULE_MESSAGE)
+
+    has_letter = any(character.isalpha() for character in password)
+    has_digit = any(character.isdigit() for character in password)
+
+    if not has_letter or not has_digit:
+        raise ValueError(PASSWORD_RULE_MESSAGE)
+
+    return password
 
 
 def hash_password(password: str) -> str:
@@ -32,7 +51,6 @@ def create_access_token(
 ) -> str:
     """Cria um JWT usando as configuracoes carregadas do `.env`."""
 
-    # O token expira conforme a configuracao central do projeto.
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
@@ -55,7 +73,6 @@ def create_access_token(
 def decode_access_token(token: str) -> dict[str, Any]:
     """Decodifica o JWT e devolve os dados do usuario autenticado."""
 
-    # Se o token estiver invalido ou expirado, a biblioteca levanta JWTError.
     return jwt.decode(
         token,
         settings.jwt_secret_key,
